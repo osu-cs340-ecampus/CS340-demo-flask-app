@@ -2,7 +2,7 @@
 
 This guide is intended for the students in CS 340 who want to take a path through the class using Flask/Python instead of Node.js.
 
-This guide walks through everything from getting the tools setup to work on the app, setting up the infrastructure required to build and run your app on OSU's flip server.
+This guide walks through everything from getting the tools setup to work on the app, setting up the infrastructure required to build and run your app on OSU's Classwork server.
 
 There are a few assumptions that are made when this guide is written:
 
@@ -36,7 +36,7 @@ You can clone this repo as is, and it will run, so long as you have loaded the d
   - [Creating Your Directory](#creating-your-directory)
   - [Creating Your app.py](#creating-your-app.py)
   - [Filling your Database](#filling-your-database)
-  - [Hosting on Flip Servers and Running Forever (via Gunicorn)](#hosting-on-flip-servers-and-running-forever-via-gunicorn)
+  - [Hosting on Classwork Server and Running Forever (via Gunicorn)](#hosting-on-classwork-server-and-running-forever-via-gunicorn)
 - [Step 1 - Get The Tools Downloaded You Will Need](#step-1---get-the-tools-downloaded-you-will-need)
   - [Text Editior](#text-editior)
   - [Database Engine](#database-engine)
@@ -79,7 +79,7 @@ You can clone this repo as is, and it will run, so long as you have loaded the d
     - [Installing Dependencies from Requirements.txt](#installing-dependencies-from-requirementstxt)
     - [Populating your OSU Database](#populating-your-osu-database)
     - [Changing our Credentials](#changing-our-credentials)
-    - [Deploying the Migrated Project on OSUs Flip Server](#deploying-the-migrated-project-on-osus-flip-server)
+    - [Deploying the Migrated Project on OSUs Classwork Server](#deploying-the-migrated-project-on-osus-classwork-server)
   - [A Better Way to Store Database Credentials](#a-better-way-to-store-database-credentials)
     - [Environment Variables](#environment-variables)
 - [Extra Documentation](#extra-documentation)
@@ -96,37 +96,40 @@ The rest of the guide is very professional, informative, and detailed, filling i
 
 But without further ado, here's the quick and dirty start-up:
 
-## Creating Your Directory
+## Creating folder structure and installing dependencies
 
-1) Create a new folder for task 1 in your Flip directory (can be in a CS340 folder if you desire), name it as you like, let's start from scratch.
+1) Create a new directory in your Classwork home directory, call it **CS340**. Inside the newly created CS340 directory, create a subdirectory, called **activity2**. This can be accomplished with one terminal command: `mkdir -p ~/CS340/activity2`
 
-![step1 command](./doc_img_step0/step1.png)
+![Make directory called activity2](./doc_img_step0/mkdir_activity2.png)
 
-2) Using the terminal, make sure you "cd X" into that folder, with X being the folder name.
+2) From within the terminal, navigate to the newly created activity2 directory. `cd ~/CS340/activity2`
 
-![step2 command](./doc_img_step0/step2.png)
+![Change directory into activity2](./doc_img_step0/cd_activity2.png)
 
-3) Run "python3 -m venv ./venv" (the period . is part of the command, don’t forget it!).
 
-![step4 command](./doc_img_step0/step4.png)
+3) Run `python3 -m venv ./venv` (the period . is part of the command, don’t forget it!).
 
-4) Run "source venv/bin/activate", afterwards you should see (yourfoldername) flipX in the terminal which means we are successfully in the virtual environment.
+![Create virtual environment](./doc_img_step0/create_venv.png)
 
-![step5 command](./doc_img_step0/step5.png)
+4) Run `source venv/bin/activate`. Afterwards you should see the terminal prompt change to (venv) classwork ~/CS340/activity2 - which means we are successfully in the virtual environment.
 
-5) After that, run "pip3 install flask-mysqldb", don’t worry about updating pip or whatever it prompts you with – ignore that.
+![Activate virtual environment](./doc_img_step0/venv_activate.png)
 
-![step6 command](./doc_img_step0/step6.png)
+*Note: You can leave the virtual environment at any time by typing `deactivate` in the terminal. We should be in the virtual environment whenever we are working on our project.*
 
-## Creating Your app.py
+5) Next, run `pip3 install flask-mysqldb`, don’t worry about updating pip or whatever it prompts you with – ignore that.
 
-7) Create a file named "app.py".
+![Install dependency](./doc_img_step0/install_flask_mysqldb.png)
 
-![step7 command](./doc_img_step0/step7.png)
+## Creating app.py
 
-8) Populate that file with this code (don’t forget to save after):
+7) Create a file named **app.py**. `touch app.py`
 
-```
+![Current folder structure](./doc_img_step0/folder_structure.png)
+
+8) Populate `app.py` with the following code (don't forget to save the file):
+
+```python
 from flask import Flask, render_template, json, redirect
 from flask_mysqldb import MySQL
 from flask import request
@@ -135,9 +138,9 @@ import os
 app = Flask(__name__)
 
 app.config['MYSQL_HOST'] = 'classmysql.engr.oregonstate.edu'
-app.config['MYSQL_USER'] = 'cs340_UserName'
-app.config['MYSQL_PASSWORD'] = 'xxxx' #last 4 of onid
-app.config['MYSQL_DB'] = 'cs340_UserName'
+app.config['MYSQL_USER'] = 'cs340_[your_onid]'
+app.config['MYSQL_PASSWORD'] = '[your_db_password]' #last 4 of onid
+app.config['MYSQL_DB'] = 'cs340_[your_onid]'
 app.config['MYSQL_CURSORCLASS'] = "DictCursor"
 
 
@@ -150,7 +153,7 @@ def root():
     query = "SELECT * FROM diagnostic;"
     query1 = 'DROP TABLE IF EXISTS diagnostic;';
     query2 = 'CREATE TABLE diagnostic(id INT PRIMARY KEY AUTO_INCREMENT, text VARCHAR(255) NOT NULL);';
-    query3 = 'INSERT INTO diagnostic (text) VALUES ("MySQL is working for yourONID!")';
+    query3 = 'INSERT INTO diagnostic (text) VALUES ("MySQL is working for myONID!")';
     query4 = 'SELECT * FROM diagnostic;';
     cur = mysql.connection.cursor()
     cur.execute(query1)
@@ -159,72 +162,45 @@ def root():
     cur.execute(query4)
     results = cur.fetchall()
 
-    return "<h1>MySQL Results</h1>" + str(results[0])
+    return "<h1>MySQL Results:</h1>" + str(results[0])
 
 
 # Listener
 if __name__ == "__main__":
 
-    #Start the app on port 3000, it will be different once hosted
-    app.run(port=3000, debug=True)
+    # Start the app to run on a port of your choosing
+    app.run(port=YOUR_PORT_NUM, debug=True)
 ```
 
-9) Towards the top of the app.py where we have 5 lines dedicated to your database credentials, make sure to fill that in. Change 'CS340_name' to your OSU account name, so in my case that would be 'CS340_kamanda'. Replace 'XXXX' with the last 4 digits of your OSU id.
+9) Towards the top of the app.py where we have 5 lines dedicated to your database credentials, make sure to fill that in. Change 'cs340_name' to your OSU account name, so in my case that would be 'cs340_kamanda'. Replace 'XXXX' with the last 4 digits of your OSU ID number.
 
-![step9 command](./doc_img_step0/step9.png)
+![Inputting database credentials](./doc_img_step0/step9.png)
 
-10) Change the port at the bottom to any port of your choosing (some ports might be taken, just choose a large number but not too large, there is a ceiling number on the flip servers). Generally, any number within 1024 < PORT < 65535 is acceptable. PORT < 1024 are privileged. Avoid numbers like 1234 (incremental increases), or 2222 (repeating) as students often prefer these easier numbers to type in and are often already in use.
 
-![step10 command](./doc_img_step0/step10.png)
+10) Assign a valid port number to the port parameter at the bottom (`YOUR_PORT_NUM`) to any port of your choosing (some ports might be taken, just choose a large number but not too large, there is a ceiling number on the Classwork server). Generally, any number within 1024 < PORT < 65535 is acceptable. PORT < 1024 are privileged. Avoid numbers like 1234 (incremental increases), or 2222 (repeating) as students often prefer these easier numbers to type in and are often already in use. See the image below for an example:
 
-[//]: # " ## Filling your Database "
+![Assigning a port number](./doc_img_step0/step10.png)
 
-[//]: # " 11) (Ignore this step if you already completed the query portion of task 1) If you haven't done so already, pivot for a moment and log in to your school provided database via phpmyadmin (https://classmysql.engr.oregonstate.edu/index.php). Note that you can also accomplish the above steps 11-12 via the terminal or the webapp itself if you desire, but I find it's good practice to familiarize yourself with the phpmyadmin UI early, it's a great tool! "
+Save the file
 
-[//]: # " ![step11 command](./doc_img_step0/step11.png) "
+## Hosting on the Classwork Server and Running Forever via Gunicorn
 
-[//]: # " 12) (Ignore this step if you already completed the query portion of task 1) Execute the queries below in the SQL tab of phpmyadmin after importing the bsg_db.sql file in order to create a diagnostic table (as outlined in the module linked in step 10). These are the 4 lines of code, input them in the SQL tab and hit ‘Go’ (see screenshot below): "
 
-[//]: # " ``` "
+11)  In the terminal, run the following command: `pip3 install gunicorn`
+![Installing gunicorn](./doc_img_step0/gunicorn_install.png)
 
-[//]: # " DROP TABLE IF EXISTS diagnostic; "
 
-[//]: # " CREATE TABLE diagnostic(id INT PRIMARY KEY, text VARCHAR(255) NOT NULL); "
+12) Run `gunicorn -b 0.0.0.0:YOUR_PORT_NUM -D app:app` - replacing 'YOUR_PORT_NUM' with your desired port number (does not have to be the same port number that you used for your development server inside app.py).
 
-[//]: # " INSERT INTO diagnostic (text) VALUES (\"MySQL is working\"); "
+![Running gunicorn](./doc_img_step0/gunicorn_run.png)
 
-[//]: # " SELECT * FROM diagnostic; "
+13) Navigate to your web app address, i.e. http://classwork.engr.oregonstate.edu:YOUR_PORT_NUM/ with `YOUR_PORT_NUM` being the port number you selected when you ran gunicorn.
 
-[//]: # " ``` "
+![Viewing the application in the browser](./doc_img_step0/browser_activity2.png)
 
-[//]: # " ![step12 command](./doc_img_step0/step12.png) "
+14) Should you need to restart the web app after making changes, run `pkill -u yourONID gunicorn` replacing yourONID (i.e. for me it would be kamanda) and restart by running the command `gunicorn -b 0.0.0.0:YOUR_PORT_NUM -D app:app`. Note that the pkill command will kill all of your Classwork gunicorn processes. 
 
-## Hosting on Flip Servers and Running Forever via Gunicorn
-
-[//]: # " 13) Ok, back to app.py and VScode. Run \"pip3 install gunicorn\" via the Terminal. "
-
-11) Ok, back to app.py and VScode. Run "pip3 install gunicorn" via the Terminal.
-![step13 command](./doc_img_step0/step13.png)
-
-[//]: # " 14) Run \"gunicorn -b 0.0.0.0:XXXXX -D app:app\" replacing 'XXXXX' with your desired port number. "
-
-12) Run "gunicorn -b 0.0.0.0:XXXXX -D app:app" replacing 'XXXXX' with your desired port number.
-
-![step14 command](./doc_img_step0/step14.png)
-
-[//]: # " 15) Navigate to your web app address, i.e. http://flipX.engr.oregonstate.edu:XXXXX/ with the first 'X' being your flip server (1-3), and XXXXX being your port number. "
-
-13) Navigate to your web app address, i.e. http://flipX.engr.oregonstate.edu:XXXXX/ with the first 'X' being your flip server (1-3), and XXXXX being your port number.
-
-![step15 command](./doc_img_step0/step15.png)
-
-[//]: # " 16) Should you need to restart the web app after making changes, run \"pkill -u yourOSUAccountName gunicorn\" replacing yourOSUid and restart by running the command in step 14). Note that the pkill command will kill all of your flip gunicorn processes. "
-
-14) Should you need to restart the web app after making changes, run "pkill -u yourOSUAccountName gunicorn" replacing yourOSUid (i.e. for me it would be kamanda) and restart by running the command in step 14). Note that the pkill command will kill all of your flip gunicorn processes. 
-
-![step16 command](./doc_img_step0/step16.png)
-
-[//]: # " 17) Hopefully that was easy to understand and that you now have a basic functioning flask webapp. Feel free to tinker around now and add templating and the like (there is a section on templating and other good notes further into the guide)! Again, I can’t stress this enough – if you want further context and detail, please do read on through the main body of the flask guide. It's well articulated with the reasoning behind many of these steps, written by the wonderful TA Greg Kochera for past terms! This section is just a fast track to kickstarting a basic app as students in the past have gotten lost or had issues with some of the greater detail in the rest of the guide, but it definitely still contains valuable information. "
+![Killing gunicorn in the terminal](./doc_img_step0/step16.png)
 
 15) Hopefully that was easy to understand and that you now have a basic functioning flask webapp. Feel free to tinker around now and add templating and the like (there is a section on templating and other good notes further into the guide)! Again, I can’t stress this enough – if you want further context and detail, please do read on through the main body of the flask guide. It's well articulated with the reasoning behind many of these steps, written by the wonderful TA Greg Kochera for past terms! This section is just a fast track to kickstarting a basic app as students in the past have gotten lost or had issues with some of the greater detail in the rest of the guide, but it definitely still contains valuable information.
 
@@ -238,7 +214,7 @@ Text Editors are like clothes. Everyone has their preferences. I prefer VS Code 
 
 ## Database Engine
 
-**MySQL** is the database we will be using in this class. It is already installed for you on the flip servers.
+**MySQL** is the database we will be using in this class. It is already installed for you on the Classwork server.
 
 ***Optionally*** you may wish to install a local copy of MySQL on your PC from [here](https://dev.mysql.com/downloads/mysql/) is a link to download MySQL Community Edition. Pick the correct operating system you are on, and follow the prompts. It will ask you to login or signup, just skim to the bottom and click "No thanks, just start my download."
 
@@ -246,7 +222,7 @@ Text Editors are like clothes. Everyone has their preferences. I prefer VS Code 
 
 ## Python
 
-Python is the language we will be using to build our Flask application. It is also already installed on the flip servers. We will require Python 3 (or better) for the purposes of this project.
+Python is the language we will be using to build our Flask application. It is also already installed on the Classwork server. We will require Python 3 (or better) for the purposes of this project.
 
 ***Optionally*** you may wish to install a local copy of MySQL on your PC from [here](https://www.python.org/downloads/)
 
@@ -332,7 +308,7 @@ The short version is that you will be installing a few Python packages to suppor
 Fire up your terminal, navigate to the root of your project folder (the top level of your repo folder):
 
 ```bash
-# Logged into the school's flip servers
+# Logged into the school's Classwork server
 pip3 install --user virtualenv
 ```
 
@@ -631,7 +607,7 @@ There may be others that I haven't mentioned. This guide will use the command li
 Let's get connected to the database, open your terminal and enter
 
 ```bash
-# login to MySQL on flip servers
+# login to MySQL on the Classwork server
 # username is usually cs340_ONIDusername
 # password is usually last 4 of student ID
 mysql -u cs340_username -h classmysql.engr.oregonstate.edu -p cs340_username 
@@ -668,7 +644,7 @@ In that folder, I have placed two files; `bsg-db.sql` and `bsg-DML.sql`. We will
      └ bsg_DML.sql
 ```
 
-Navigate to your `database` folder in terminal, then open up MySQL. If you are working locally on your on PC and have a copy of MySQL then you will need to create a database to store the data in, use the database (make it the active one) and then load data into it from our file. If you are working on the COE MySQL on flip servers, then you  do not need to create a new database to follow this tutorial - just use your assigned student database. To be more specific, please ignore the "CREATE DATABASE bsg;" and "USE bsg;" commands shown in the screenshot.
+Navigate to your `database` folder in terminal, then open up MySQL. If you are working locally on your on PC and have a copy of MySQL then you will need to create a database to store the data in, use the database (make it the active one) and then load data into it from our file. If you are working on the COE MySQL on the Classwork server, then you do not need to create a new database to follow this tutorial - just use your assigned student database. To be more specific, please ignore the "CREATE DATABASE bsg;" and "USE bsg;" commands shown in the screenshot.
 
 ```SQL
 source bsg_db.sql
@@ -1004,7 +980,7 @@ Lastly, we go back to our terminal and run `gunicorn`.
 gunicorn --bind 0.0.0.0:<your-desired-port-here> wsgi:app -D
 ```
 
-Pay note to the `-D` switch here. When we add this switch, it tells Gunicorn to 'daeomonize' its process, which allows it to run in the background, and will not exit when you logoff, close your terminal or otherwise. This applies on the flip server and on your local machine. If you are just testing and *do not want the application to stay alive after logging off* simply omit the `-D` switch.
+Pay note to the `-D` switch here. When we add this switch, it tells Gunicorn to 'daeomonize' its process, which allows it to run in the background, and will not exit when you logoff, close your terminal or otherwise. This applies on the Classwork server and on your local machine. If you are just testing and *do not want the application to stay alive after logging off* simply omit the `-D` switch.
 
 Once Gunicorn is running, you should be able to navigate to `localhost:port` on your browser where `port` is the port you specified when you ran Gunicorn and see your webapp in all of its glory!
 
@@ -1085,11 +1061,9 @@ Once we are 'up to date' we can move on
 
 Add your project partner as a collaborator to your repo. Then have them folow these steps:
 
-Establish an SSH session with any flip. Some people use username/password authentication, others have setup SSH keys, doesn't matter. Once, you have established a shell with `flipX`, we can migrate. 
+Establish an SSH session with the Classwork server. Some people use username/password authentication, others have setup SSH keys, doesn't matter. Once, you have established a shell with Classwork, we can migrate. 
 
-> It's very important that you stay consistent in your use of the `flip` you are on. i.e. If you login with `flip2` and serve your app, then that will be the flip your app is accessible from. (Serving your app on `flip2` means you can't access it on `flip1` or `flip3`)
-
-When you establish a shell with `flipX`, you should arrive in your home folder indicated by your current directory being shown as `~`. If this is not the case, go ahead and enter the command
+When you establish a SSH connection with Classwork, you should arrive in your home folder indicated by your current directory being shown as `~`. If this is not the case, go ahead and enter the command
 
 ```bash
 cd ~
@@ -1109,7 +1083,7 @@ git clone https://github.com/gkochera/CS340-demo-flask-app.git
 
 A folder with the name of your repository is now shown in your home directory. You can verify this by entering the `ls` command.
 
-![Result after cloning to repo to flip](doc_img/git_clone_with_ls_flip.png)
+![Result after cloning to repo to Classwork](doc_img/git_clone_with_ls_flip.png)
 
 Navigate to that folder using `cd <name_of_folder_here>`
 
@@ -1127,7 +1101,7 @@ That's it, all the necessary dependecies are now installed.
 
 ### Populating your OSU Database
 
-Remember that file we created in `/database` called `backup.sql`? We're going to need that. Let's navigate to our `/database` folder on the **OSU** server (i.e. "The FLIP").
+Remember that file we created in `/database` called `backup.sql`? We're going to need that. Let's navigate to our `/database` folder on the Classwork server.
 
 We need to get access to the database command line for the school, we do this as such
 
@@ -1204,7 +1178,7 @@ For now, open up `/database/db_credentials.py` on the OSU server. The easiest wa
 
 You should be presented with a very terminal-ish looking text editor that has the contents of your `db_credentials.py`.
 
-Comment out the `host`, `user`, `passwd` and `db` that we set up for local environment and uncomment the ones below that which are `For OSU Flip Servers` as such
+Comment out the `host`, `user`, `passwd` and `db` that we set up for local environment and uncomment the ones below that which are `For OSU Classwork Server` as such
 
 > To edit text in `vim` press the `i` key. This puts you in insert mode. You can use the arrow keys to navigate around and move your cursor up and down to make changes. When you are done making changes press the `<ESC>` key and type `:wq`. This will save the changes and close the file.
 
@@ -1228,26 +1202,26 @@ gunicorn --bind 0.0.0.0:<your_port_choice_here> wsgi:app
 # Remember to add the -D switch if you want gunicorn to run persistently even after you log off
 ```
 
-> If you get an error here, its almost certainly either your credenital file has the incorrect credentials or someone is already using that port number on the flip. Verify your credentials are correct and then try a different port number. Valid port numbers are higher than 1023 and up to 65535. Avoid ports with repeating or incrementing digits like 2222 or 5678. Students usually choose these because they're *easy* to remember.
+> If you get an error here, its almost certainly either your credenital file has the incorrect credentials or someone is already using that port number on the Classwork server. Verify your credentials are correct and then try a different port number. Valid port numbers are higher than 1023 and up to 65535. Avoid ports with repeating or incrementing digits like 2222 or 5678. Students usually choose these because they're *easy* to remember.
 
 ![Terminal on OSU running gunicorn command](doc_img/app_on_flip_terminal.png)
 
 Open up your browser (make sure you are connected to the VPN) and enter
 
 ```bash
-http://flipX.engr.oregonstate.edu:<your_chosen_port_here>
+http://classwork.engr.oregonstate.edu:<your_chosen_port_here>
 ```
 
 And we should see our project!
 
-![Project hosted from Flip - Root Route](doc_img/app_on_flip_root_route.png)
+![Project hosted from Classwork - Root Route](doc_img/app_on_classwork_root_route.png)
 
 Check the `/bsg-people` route...
 
-![Project hosted from Flip - bsg-people Route](doc_img/app_on_flip_bsg_people_route.png)
+![Project hosted from Classwork - bsg-people Route](doc_img/classwork_bsgpeople_route.png)
 
 We have confirmation that...
-- Our project is on the OSU Flip Server
+- Our project is on the OSU Classwork Server
 - The database is correctly loaded
 - The webapp is running and functioning correctly
 - We did everything right!
@@ -1353,20 +1327,20 @@ passwd = os.environ.get("340DBPW")
 db = os.environ.get("340DB")
 ```
 
-Run your app now, and if all went well, it runs. And now, your secrets are well, a little more secret. Now, we have to handle the flip side of things; No pun intended. 
+Run your app now, and if all went well, it runs. And now, your secrets are well, a little more secret. 
 
 First, _make sure you added your `.env` file to `.gitignore`!_
 
 Now, commit and push your changes to GitHub or whatever remote repo you are using.
 
-Then, login to the flip server you plan on hosting on, and navigate to the root of your project, and perform a `git pull`. This will update the files on the flip server to mirror all the work we just did.
+Then, login to the Classwork server, and navigate to the root of your project, and perform a `git pull`. This will update the files on the Classwork server to mirror all the work we just did.
 
 Activate your virtual envirionment and once again install `dotenv` by entering
 ```bash
 pip3 install dotenv
 ```
 
-Now, here's the cool part, create a new `.env` in your project folder on the flip server. This time, it will look a bit different like this
+Now, here's the cool part, create a new `.env` in your project folder on the Classwork server. This time, it will look a bit different like this
 
 ```bash
 340DBHOST=classmysql.engr.oregonstate.edu
@@ -1379,7 +1353,7 @@ You want to modify these values for each of your own purposes. Change out the re
 
 Save the file, and as long as everything went well. Run your server. You should be graced with a list of people from the bsg-people table if you go to the `/bsg-people` route.
 
-Thats it. Basically the `.env` acts like a little key for our deployments, locally or on OSU's servers. When the app loads on the flip, it uses the OSU credentials stored in the `.env` file on the flip. When the app loads on your local computer, it uses the credentials stored in the `.env` file on your computer.
+Thats it. Basically the `.env` acts like a little key for our deployments, locally or on OSU's servers. When the app loads on the Classwork server, it uses the OSU credentials stored in the `.env` file on the Classwork server. When the app loads on your local computer, it uses the credentials stored in the `.env` file on your computer.
 
 You no longer are storing sensitive information like database passwords and hostnames on GitHub for all to see. Is this the best security? No. You can encrypt your secrets, you can store them in other areas of the computer, you can even store them in the cloud and lease out the secrets when the app runs. It's way beyond the scope of this, but for those interested, here is some extra reading.
 
