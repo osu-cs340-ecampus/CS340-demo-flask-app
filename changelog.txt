@@ -1,0 +1,7 @@
+Python change log:
+
+- Replaced references of "Flip" with "Classwork"
+- Updated several screenshots where 'flipX.engr.oregonstate.edu'
+    with browser screenshots showing classwork URL
+- Updated some terminal screenshots (mostly in step 0) to show Classwork prompt
+    - Mitigates confusion
