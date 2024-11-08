@@ -153,7 +153,7 @@ def root():
     query = "SELECT * FROM diagnostic;"
     query1 = 'DROP TABLE IF EXISTS diagnostic;';
     query2 = 'CREATE TABLE diagnostic(id INT PRIMARY KEY AUTO_INCREMENT, text VARCHAR(255) NOT NULL);';
-    query3 = 'INSERT INTO diagnostic (text) VALUES ("MySQL is working for myONID!")';
+    query3 = 'INSERT INTO diagnostic (text) VALUES ("MySQL and Flask is working for myONID!")';
     query4 = 'SELECT * FROM diagnostic;';
     cur = mysql.connection.cursor()
     cur.execute(query1)
@@ -196,7 +196,7 @@ Save the file
 
 13) Navigate to your web app address, i.e. http://classwork.engr.oregonstate.edu:YOUR_PORT_NUM/ with `YOUR_PORT_NUM` being the port number you selected when you ran gunicorn.
 
-![Viewing the application in the browser](./doc_img_step0/browser_activity2.png)
+![Viewing the application in the browser](./doc_img_step0/browser_activity2_r.png)
 
 14) Should you need to restart the web app after making changes, run `pkill -u yourONID gunicorn` replacing yourONID (i.e. for me it would be kamanda) and restart by running the command `gunicorn -b 0.0.0.0:YOUR_PORT_NUM -D app:app`. Note that the pkill command will kill all of your Classwork gunicorn processes. 
 
